@@ -5,16 +5,16 @@ using UnityEngine;
 public class BotMover : MonoBehaviour
 {
     [SerializeField] private DetectedResource _resources;
-    [SerializeField] private GameObject _resourcesInHand;
     [SerializeField] private Transform _basket;
     [SerializeField] private float _speed;
+    [SerializeField] Base _base;
 
-    private GameObject _target;
     private Vector3 _startPosition;
     private bool _isTake = false;
-    private int _resourcecCountInHand = 0;
+    private bool _isBusy = false;
 
-    public int ResourceCountInHand => _resourcecCountInHand;
+    public bool IsTake => _isTake;
+    public bool IsBusy => _isBusy;
 
     private void Start()
     {
@@ -23,23 +23,33 @@ public class BotMover : MonoBehaviour
 
     private void Update()
     {
-
-        if (_isTake)
+        if (_base.Detected)
         {
-            MoveToTarget(_basket.position);
-        }
-        else
-        {
-            _target = ClosesResorce();
-
-            if (_target != null)
+            if (_isTake)
             {
-                MoveToTarget(_target.transform.position);
+                MoveToTarget(_basket.position);
             }
             else
             {
+                _base.BotMoveToResource();
+            }
 
-                MoveToTarget(_startPosition);
+            if (transform.position.x == _basket.position.x)
+            {
+                _base.ChangeDetectedFalse();
+                _isTake = false;
+            }
+
+            _isBusy = true;
+        }
+        else
+        {
+            MoveToTarget(_startPosition);
+
+            if (transform.position.x == _startPosition.x && _isBusy)
+            {
+                _isBusy = false;
+                _base.MakeBotNull();
             }
         }
     }
@@ -54,37 +64,16 @@ public class BotMover : MonoBehaviour
         if (collision.TryGetComponent<Resource>(out Resource resource))
         {
             _isTake = true;
-            _resourcesInHand.SetActive(true);
-            _resourcecCountInHand = resource.ResourceUnit;
-        }
-
-        if (collision.TryGetComponent<CollectionResource>(out CollectionResource counter))
-        {
-            _isTake = false;
-            _resourcesInHand.SetActive(false);
         }
     }
 
-    private GameObject ClosesResorce()
+    public void Busy()
     {
-        GameObject closesHere = null;
+        _isBusy = true;
+    }
 
-        float leastDistance = Mathf.Infinity;
-
-        for (int i = 0; i < _resources.Targets.Length; i++)
-        {
-            if (_resources.GetResource(i) != null)
-            {
-                float distanceHere = Vector3.Distance(transform.position, _resources.GetResource(i).transform.position);
-
-                if (distanceHere < leastDistance)
-                {
-                    leastDistance = distanceHere;
-                    closesHere = _resources.GetResource(i);
-                }
-            }
-        }
-
-        return closesHere;
+    public void TakeResource()
+    {
+        _isTake = true;
     }
 }

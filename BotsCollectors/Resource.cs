@@ -12,6 +12,11 @@ public class Resource : MonoBehaviour
     {
         if (collision.TryGetComponent<BotMover>(out BotMover botMover))
         {
+            transform.SetParent(botMover.transform);
+        }
+
+        if (collision.TryGetComponent<CollectionResource>(out CollectionResource counter))
+        {
             Destroy(gameObject);
         }
     }

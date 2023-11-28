@@ -16,9 +16,9 @@ public class CollectionResource : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.TryGetComponent<BotMover>(out BotMover botMover))
+        if (collision.TryGetComponent<Resource>(out Resource resource))
         {
-            _quantityResources += botMover.ResourceCountInHand;
+            _quantityResources += resource.ResourceUnit;
         }
     }
 }

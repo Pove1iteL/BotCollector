@@ -32,19 +32,17 @@ public class DetectedResource : MonoBehaviour
 
     public GameObject GetResource(int index)
     {
-        return _targets[index];
+        if (index < _targets.Length && index >= 0)
+        {
+            return _targets[index];
+        }
+
+        return null;
     }
 
     private void DetectResources()
     {
         _targets = GameObject.FindGameObjectsWithTag(ResourseTag);
 
-        //foreach (GameObject resource in _findedResources)
-        //{            
-        //    _targets[index] = resource;
-        //    index++;
-        //}
-
-        //index = 0;
     }
 }
