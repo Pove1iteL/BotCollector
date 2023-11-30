@@ -6,12 +6,11 @@ public class GenertionResource : MonoBehaviour
 {
     [SerializeField] private Resource _resoursePrefab;
     [SerializeField] private Transform _resoursePoint;
-    [SerializeField] private float _speedGeneration = 5;
-    [SerializeField] private int _maxResources = 30;
+    [SerializeField] private int _maxResources = 5;
+    [SerializeField] private float _speedGeneration = 3f;
 
     private Transform[] _resourcePoints;
-
-    public int QuantityResource => _maxResources;
+    private Coroutine _coroutine;
 
     private void Start()
     {
@@ -22,7 +21,7 @@ public class GenertionResource : MonoBehaviour
             _resourcePoints[i] = _resoursePoint.GetChild(i);
         }
 
-        StartCoroutine(GenerationResources());
+        _coroutine = StartCoroutine(GenerationResources());
     }
 
     private IEnumerator GenerationResources()
@@ -35,9 +34,11 @@ public class GenertionResource : MonoBehaviour
             int randomPoint = Random.Range(0, _resourcePoints.Length);
             countResourses++;
 
-            var resource = Instantiate(_resoursePrefab, _resourcePoints[randomPoint].position, Quaternion.identity);
+            Instantiate(_resoursePrefab, _resourcePoints[randomPoint].position, Quaternion.identity);
 
             yield return waitSeconds;
         }
+
+        StopCoroutine(_coroutine);
     }
 }

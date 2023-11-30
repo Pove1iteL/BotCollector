@@ -4,17 +4,15 @@ using UnityEngine;
 
 public class BotMover : MonoBehaviour
 {
-    [SerializeField] private DetectedResource _resources;
     [SerializeField] private Transform _basket;
     [SerializeField] private float _speed;
-    [SerializeField] Base _base;
+    [SerializeField] private Base _base;
 
     private Vector3 _startPosition;
-    private bool _isTake = false;
-    private bool _isBusy = false;
 
-    public bool IsTake => _isTake;
-    public bool IsBusy => _isBusy;
+    private bool _hasTarget;
+    private Resource _resource;
+    private bool _hasResource;
 
     private void Start()
     {
@@ -23,57 +21,59 @@ public class BotMover : MonoBehaviour
 
     private void Update()
     {
-        if (_base.Detected)
+        if (_hasTarget)
         {
-            if (_isTake)
+            if (_hasResource)
             {
                 MoveToTarget(_basket.position);
             }
             else
             {
-                _base.BotMoveToResource();
+                MoveToTarget(_resource.transform.position);
             }
-
-            if (transform.position.x == _basket.position.x)
-            {
-                _base.ChangeDetectedFalse();
-                _isTake = false;
-            }
-
-            _isBusy = true;
         }
         else
         {
             MoveToTarget(_startPosition);
 
-            if (transform.position.x == _startPosition.x && _isBusy)
+            if (_base.TryGetResource(out Resource resource))
             {
-                _isBusy = false;
-                _base.MakeBotNull();
+                _resource = resource;
+                _hasTarget = true;
             }
         }
     }
 
-    public void MoveToTarget(Vector3 target)
+    private void MoveToTarget(Vector3 target)
     {
         transform.position = Vector3.MoveTowards(transform.position, target, _speed * Time.deltaTime);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.TryGetComponent<Resource>(out Resource resource))
+        if (collision.TryGetComponent(out Resource resource))
         {
-            _isTake = true;
+            if (_resource == resource)
+            {
+                _hasResource = true;
+                _resource.transform.SetParent(transform);
+                _resource.GetComponent<BoxCollider2D>().enabled = false;
+            }
         }
-    }
 
-    public void Busy()
-    {
-        _isBusy = true;
-    }
+        if (collision.TryGetComponent(out CollectionResource collection))
+        {
+            if (_hasResource)
+            {
+                _resource.transform.SetParent(collection.transform);
+                _resource.transform.position = collection.transform.position;
+                collection.OnGetResource();
 
-    public void TakeResource()
-    {
-        _isTake = true;
+                _hasResource = false;
+                _hasTarget = false;
+                _resource.gameObject.SetActive(false);
+                _resource = null;
+            }
+        }
     }
 }

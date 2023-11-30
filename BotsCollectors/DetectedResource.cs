@@ -4,20 +4,11 @@ using UnityEngine;
 
 public class DetectedResource : MonoBehaviour
 {
-    private const string ResourseTag = "Resource";
-
-    [SerializeField] private GenertionResource _generationResource;
     [SerializeField] private float detectionDelay = 1f;
 
     private float detectionTimer;
-    private GameObject[] _targets;
 
-    public GameObject[] Targets => _targets;
-
-    private void Start()
-    {
-        _targets = new GameObject[_generationResource.QuantityResource];
-    }
+    [SerializeField] private List<Resource> _resources = new List<Resource>();
 
     private void Update()
     {
@@ -30,19 +21,39 @@ public class DetectedResource : MonoBehaviour
         }
     }
 
-    public GameObject GetResource(int index)
+    public bool TryGetResource(out Resource resource)
     {
-        if (index < _targets.Length && index >= 0)
+        if (_resources.Count == 0)
         {
-            return _targets[index];
+            resource = null;
+            return false;
         }
 
-        return null;
+        var res = _resources[0];
+        _resources.Remove(res);
+
+        resource = res;
+
+        return true;
     }
 
     private void DetectResources()
     {
-        _targets = GameObject.FindGameObjectsWithTag(ResourseTag);
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, 100);
 
+        foreach (Collider2D collider in colliders)
+        {
+            if (collider.gameObject.TryGetComponent(out Resource res))
+            {
+                if (!_resources.Contains(res))
+                {
+                    if (res.IsCollected == false)
+                    {
+                        res.Collect();
+                        _resources.Add(res);
+                    }
+                }
+            }
+        }
     }
 }
